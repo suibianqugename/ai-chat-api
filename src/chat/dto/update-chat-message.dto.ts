@@ -1,12 +1,22 @@
-import { ArrayNotEmpty, IsNotEmpty } from 'class-validator';
+import { ArrayNotEmpty, IsEnum, IsNotEmpty } from 'class-validator';
 
-type CreateMessageDto = {
-  role: string;
+enum Role {
+  USER = 'user',
+  ASSISTANT = 'assistant',
+  SYSTEM = 'system',
+}
+
+class MessageDto {
+  @IsNotEmpty()
+  @IsEnum(Role)
+  role: Role;
+
+  @IsNotEmpty()
   content: string;
-};
+}
 
 export class UpdateChatMessageDto {
   @IsNotEmpty()
   @ArrayNotEmpty()
-  messages: CreateMessageDto[];
+  messages: MessageDto[];
 }

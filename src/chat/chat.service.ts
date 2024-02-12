@@ -21,33 +21,65 @@ export class ChatService {
   async create(createChatDto: CreateChatDto) {
     // const lastMessage = createChatDto.messages.slice(-1)[0];
 
-    // const data: Prisma.ChatCreateInput = {
-    //   ...createChatDto,
-    //   messages: {
-    //     create: lastMessage,
-    //   },
-    // };
+    const { messages } = createChatDto;
 
-    const messages =
-      createChatDto.messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+    const res = await this.completionCreate(
+      messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+    );
 
-    const res = await this.completionCreate(messages);
+    const data: Prisma.ChatCreateInput = {
+      ...createChatDto,
+      owner: {
+        connect: { id: 1 },
+      },
+      messages: {
+        createMany: {
+          data: [
+            ...messages,
+            { role: res.role, content: res.content as string },
+          ],
+        },
+      },
+    };
 
-    // return this.prisma.chat.create({ data });
-    return res;
+    const savedData = await this.prisma.chat.upsert({
+      where: { id: 0 },
+      update: {},
+      create: data,
+      include: {
+        messages: true,
+      },
+    });
+    return savedData;
   }
 
   async createChatMessage(
     id: number,
     updateChatMessageDto: UpdateChatMessageDto,
   ) {
-    console.log('id', id);
-    const messages =
-      updateChatMessageDto.messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+    const { messages } = updateChatMessageDto;
+    const lastMessage = messages.slice(-1)[0];
+    const res = await this.completionCreate(
+      messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+    );
 
-    const res = await this.completionCreate(messages);
+    const responseMsgFromAi = {
+      role: res.role,
+      content: res.content as string,
+    };
 
-    // return this.prisma.chat.create({ data });
+    const latestTwoMessage = [lastMessage, responseMsgFromAi];
+
+    await this.prisma.chat.update({
+      where: { id: id },
+      data: {
+        messages: {
+          createMany: {
+            data: [...latestTwoMessage],
+          },
+        },
+      },
+    });
     return res;
   }
 
@@ -78,11 +110,15 @@ export class ChatService {
     return res.choices[0].message;
   }
 
-  findAll() {
-    return this.prisma.chat.findMany();
+  findAll(): Promise<Chat[]> {
+    return this.prisma.chat.findMany({
+      include: {
+        messages: true,
+      },
+    });
   }
 
-  findOne(id: number) {
+  findOne(id: number): Promise<Chat | null> {
     return this.prisma.chat.findUnique({
       where: { id },
       include: {

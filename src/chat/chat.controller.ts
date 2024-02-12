@@ -1,17 +1,7 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
-import { Prisma } from '@prisma/client';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
 
 @ApiTags('chat')
@@ -19,14 +9,10 @@ import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Post()
-  create(@Body() createChatDto: CreateChatDto) {
-    // let chat: Prisma.ChatCreateInput;
-
-    return this.chatService.create(createChatDto);
-  }
-
-  @Post(':id/message')
+  @ApiOperation({
+    summary: 'Add new message for exist chat',
+  })
+  @Post(':id')
   async createChatMessage(
     @Param('id') id: string,
     @Body() updateChatMessageDto: UpdateChatMessageDto,
@@ -34,11 +20,27 @@ export class ChatController {
     return this.chatService.createChatMessage(+id, updateChatMessageDto);
   }
 
+  @ApiOperation({
+    summary: 'Create new chat',
+  })
+  @Post()
+  create(@Body() createChatDto: CreateChatDto) {
+    // let chat: Prisma.ChatCreateInput;
+
+    return this.chatService.create(createChatDto);
+  }
+
+  @ApiOperation({
+    summary: 'Get all chats for current user',
+  })
   @Get()
   findAll() {
     return this.chatService.findAll();
   }
 
+  @ApiOperation({
+    summary: 'Get chat by ID',
+  })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.chatService.findOne(+id);
