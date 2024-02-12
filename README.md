@@ -45,6 +45,30 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Data seed
+
+```json
+# in package.json root level
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+```
+
+```bash
+# seed data
+$ npx prisma db seed
+```
+
+## Data migration
+
+```bash
+# development data migration generate (generate migration files based on prisma model)
+$ npx prisma migrate dev
+
+# production deploy(sync migration file to database)
+$ npx prisma migrate deploy
+```
+
 ## Test
 
 ```bash

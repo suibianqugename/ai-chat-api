@@ -1,9 +1,21 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { ChatModule } from './chat/chat.module';
+import { MessageModule } from './message/message.module';
+import configuration from './config/configuration';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env.local',
+      load: [configuration],
+    }),
+    ChatModule,
+    MessageModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
